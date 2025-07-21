@@ -1,0 +1,49 @@
+steps:
+  # 1. ブランチ名からデプロイ対象の環境を決定
+  - name: "gcr.io/cloud-builders/git"
+    id: "determine-environment"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        if [ "$BRANCH_NAME" == "main" ]; then
+          echo "prod" > /workspace/environment.txt
+        elif [ "$BRANCH_NAME" == "staging" ]; then
+          echo "staging" > /workspace/environment.txt
+        else
+          echo "No deployment for branch $BRANCH_NAME"
+          exit 0
+        fi
+        echo "Target environment: $(cat /workspace/environment.txt)"
+
+  # 2. Secret Managerから環境に応じたサービスアカウントキーを取得
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "get-credentials"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        ENV=$(cat /workspace/environment.txt)
+        gcloud secrets versions access latest --secret="tf-deployer-sa-key-$ENV" > /workspace/key.json
+        echo "Fetched credentials for $ENV environment."
+
+  # 3. デプロイスクリプトに実行権限を付与
+  - name: "gcr.io/cloud-builders/git"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - "chmod +x ./scripts/deploy.sh"
+
+  # 4. デプロイスクリプトを実行
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        ENV=$(cat /workspace/environment.txt)
+        # 取得したキーファイルへのパスを一時的に設定
+        export GOOGLE_APPLICATION_CREDENTIALS=/workspace/key.json
+        # deploy.shに環境を引数として渡す
+        ./scripts/deploy.sh $ENV
+    env:
+      - "CI=true"

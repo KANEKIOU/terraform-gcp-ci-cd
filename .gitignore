@@ -122,3 +122,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+credentials/
+*.tfstate
+*.tfstate.*
+
+tfplan
+terraform/.terraform/*
+# Local variable files
+*.zip

@@ -1,0 +1,35 @@
+deploy.shファイルでは、
+
+最初に、環境変数を用いて、srcやterraformなどのディレクトリソースやgcpのプロジェクトIDを設定する
+それが終わったら、どうやら最初にソースコードをzipにしてコピーしてterraformディレクトリに移動する。
+移動後に、terraform でplanを作成して実行するという流れ
+なお、認証はcredentialsにjsonを配置しておいてそのアカウントでgcloudコマンドでアカウントをアクティベートする。terraformは
+ターミナルのセッションの中でアクティベートされているアカウントを自動で検知して認証を行う。
+
+
+tfの責務はあくまでリソース単位であって、中身の差分まではみない。tf planでは、main.tfなどを参照してリモートのリソースとの差分を確認して
+必要なplanを立てる。それでは、どうやってsrcの変更を検知して再デプロイするのかというとzipにしてからterraformディレクトリに置くことてterraformがよしなに
+zipの中に含まれるhashが変更しているかどうかを検知してくれるらしい
+
+
+resource "google_storage_bucket_object" "hello_world_source" {
+    name   = "source/hello-world-function.zip"
+    bucket = google_storage_bucket.source_bucket.name
+    source = "hello-world-function.zip"
+    lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.hello_world_source
+    ]
+  }
+}
+```terraform plan`を実行すると、Terraformは`hello-world-function.zip`というファイルのハッシュ値をチェックし、「おや、前回アップロードしたZIPファイルと中身が変わっているな。これは**Cloud Storage上のオブジェクトを更新する必要がある**」と判断します。
+
+lifecycle のなかで、replace_trigggerd_byを設定できてトリガーを設定できる
+
+整理すると、ソースコードをzipにしてgcloud storageに保存→cloud run functionのリソースの設定であらかじめlifecycleで
+cloud storageの参照先のsrcのzipに変更があれば再デプロイが走るようになっている。
+lifecycleはあくまで明示的に定義するものであって、本来は設定しなくてもcloud functionsは賢いので設定されているソースに変更が
+あれば勝手に自動デプロイが走る
+
+
+ブラ
