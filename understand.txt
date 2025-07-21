@@ -30,6 +30,4 @@ lifecycle のなかで、replace_trigggerd_byを設定できてトリガーを�
 cloud storageの参照先のsrcのzipに変更があれば再デプロイが走るようになっている。
 lifecycleはあくまで明示的に定義するものであって、本来は設定しなくてもcloud functionsは賢いので設定されているソースに変更が
 あれば勝手に自動デプロイが走る
-
-
-ブラ
+→設定しないとデプロイ走らんかった

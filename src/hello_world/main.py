@@ -10,4 +10,4 @@ app = Flask(__name__)
 def hello_world():
     """リクエストに対してシンプルな挨拶を返す"""
     # 環境変数から名前を取得（なければ 'World' を使う）
-    return f"Hello world this is main"
+    return f"Hello world this is test to deploy on push"

@@ -168,8 +168,8 @@ resource "google_cloudbuild_trigger" "github_trigger" {
   # ビルド手順書としてcloudbuild.yamlを指定
   filename = "cloudbuild.yaml"
 
-  # Cloud Buildが使用するサービスアカウント
-  service_account = "projects/${var.project_id}/serviceAccounts/${local.cloudbuild_sa_email}"
+  # # Cloud Buildが使用するサービスアカウント
+  # service_account = "projects/${var.project_id}/serviceAccounts/${local.cloudbuild_sa_email}"
 
   depends_on = [
     google_project_iam_member.builder_sa_roles
